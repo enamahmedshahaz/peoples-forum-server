@@ -32,6 +32,21 @@ async function run() {
     const database = client.db("PeoplesForumDB");
     const postCollection = database.collection("posts");
 
+    // API to get all tags (sorted)
+    app.get('/tags', async (req, res) => {
+
+      const result = await postCollection.aggregate([
+        { $unwind: "$tags" },
+        {
+          $group: {
+            _id: null,
+            tags: { $addToSet: "$tags" }
+          }
+        }
+      ]).toArray();
+
+      res.send(result[0].tags.sort());
+    })
 
     // API to get all posts
     app.get('/posts', async (req, res) => {
@@ -43,15 +58,42 @@ async function run() {
         const pipeline =
           [
             {
-              $addFields: { voteDifference: { $subtract: ["$upVote", "$downVote"] } }
+              $addFields: {
+                voteDifference: { $subtract: ["$upVote", "$downVote"] },
+                latest: {
+                  $cond: {
+                    if: { $gt: ['$createdAt', '$updatedAt'] },
+                    then: '$createdAt',
+                    else: '$updatedAt'
+                  }
+                },
+              }
             },
             {
-              $sort: { voteDifference: -1 }
+              $sort: { voteDifference: -1, latest: -1 }
             }
           ];
         result = await postCollection.aggregate(pipeline).toArray();
       } else {
-        result = await postCollection.find().toArray();
+        const pipeline =
+          [
+            {
+              $addFields: {
+                voteDifference: { $subtract: ["$upVote", "$downVote"] },
+                latest: {
+                  $cond: {
+                    if: { $gt: ['$createdAt', '$updatedAt'] },
+                    then: '$createdAt',
+                    else: '$updatedAt'
+                  }
+                },
+              }
+            },
+            {
+              $sort: { latest: -1 }
+            }
+          ];
+        result = await postCollection.aggregate(pipeline).toArray();
       }
       res.send(result);
 
