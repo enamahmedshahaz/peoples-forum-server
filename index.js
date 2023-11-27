@@ -27,21 +27,51 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    // Get the database and collection on which to run the operation
+    const database = client.db("PeoplesForumDB");
+    const postCollection = database.collection("posts");
+
+
+    // API to get all posts
+    app.get('/posts', async (req, res) => {
+
+      const sortQuery = req.query.sort;
+      let result;
+
+      if (sortQuery === '1') {
+        const pipeline =
+          [
+            {
+              $addFields: { voteDifference: { $subtract: ["$upVote", "$downVote"] } }
+            },
+            {
+              $sort: { voteDifference: -1 }
+            }
+          ];
+        result = await postCollection.aggregate(pipeline).toArray();
+      } else {
+        result = await postCollection.find().toArray();
+      }
+      res.send(result);
+
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-  //  await client.close();
+    //  await client.close();
   }
 }
 run().catch(console.dir);
 
 
 app.get("/", (req, res) => {
-    res.send('::peoples-forum:: server is running...');
+  res.send('::peoples-forum:: server is running...');
 });
 
 app.listen(port, () => {
-    console.log(`peoples-forum server is running on port ${port}...`);
+  console.log(`peoples-forum server is running on port ${port}...`);
 });
