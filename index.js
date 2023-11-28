@@ -30,9 +30,31 @@ async function run() {
 
     // Get the database and collection on which to run the operation
     const database = client.db("PeoplesForumDB");
+    const userCollection = database.collection("users");
     const postCollection = database.collection("posts");
     const commentCollection = database.collection("comments");
 
+
+    // API to insert users data
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    //API to get a user info based on email
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email }
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
 
     // API to get all tags (sorted)
     app.get('/tags', async (req, res) => {
