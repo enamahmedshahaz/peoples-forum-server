@@ -31,6 +31,8 @@ async function run() {
     // Get the database and collection on which to run the operation
     const database = client.db("PeoplesForumDB");
     const postCollection = database.collection("posts");
+    const commentCollection = database.collection("comments");
+
 
     // API to get all tags (sorted)
     app.get('/tags', async (req, res) => {
@@ -120,7 +122,7 @@ async function run() {
 
       const updatedUpVote = findResult.upVote;
 
-      res.send({...updateResult, updatedUpVote});
+      res.send({ ...updateResult, updatedUpVote });
     });
 
     // API to increment downvote field of  post based on id
@@ -136,7 +138,14 @@ async function run() {
 
       const updatedDownVote = findResult.downVote;
 
-      res.send({...updateResult, updatedDownVote});
+      res.send({ ...updateResult, updatedDownVote });
+    });
+
+    // API to insert a comment
+    app.post('/comments', async (req, res) => {
+      const comment = req.body;
+      const result = await commentCollection.insertOne(comment);
+      res.send(result);
     });
 
 
