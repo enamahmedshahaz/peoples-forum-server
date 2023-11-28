@@ -107,6 +107,39 @@ async function run() {
       res.send(result);
     });
 
+    // API to increment upvote field of a  post based on id
+    app.patch('/posts/incrementUpVote/:id', async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: { upVote: 1 }
+      };
+      const updateResult = await postCollection.updateOne(filter, updateDoc);
+      const findResult = await postCollection.findOne(filter);
+
+      const updatedUpVote = findResult.upVote;
+
+      res.send({...updateResult, updatedUpVote});
+    });
+
+    // API to increment downvote field of  post based on id
+    app.patch('/posts/incrementDownVote/:id', async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: { downVote: 1 }
+      };
+      const updateResult = await postCollection.updateOne(filter, updateDoc);
+      const findResult = await postCollection.findOne(filter);
+
+      const updatedDownVote = findResult.downVote;
+
+      res.send({...updateResult, updatedDownVote});
+    });
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
