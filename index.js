@@ -126,7 +126,7 @@ async function run() {
     });
 
     //API to get a post based on user email
-    app.get('/posts/:email', async (req, res) => {
+    app.get('/posts/email/:email', async (req, res) => {
       const email = req.params.email;
       const query = { authorEmail: email };
 
@@ -164,7 +164,7 @@ async function run() {
 
 
     //API to get a post based on id
-    app.get('/posts/:id', async (req, res) => {
+    app.get('/posts/id/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await postCollection.findOne(query);
@@ -217,6 +217,13 @@ async function run() {
       res.send(result);
     });
 
+    //API to get a comment based on post Id
+    app.get('/comments/:postId', async (req, res) => {
+      const postId = req.params.postId;
+      const query = { postId: postId };
+      const result = await commentCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
