@@ -72,6 +72,9 @@ async function run() {
       res.send(result[0].tags.sort());
     });
 
+
+
+
     // API to get all posts
     app.get('/posts', async (req, res) => {
 
@@ -122,6 +125,34 @@ async function run() {
       res.send(result);
     });
 
+    //API to get a post based on user email
+    app.get('/posts/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { authorEmail: email };
+
+      const pipeline =
+        [
+          { $match: query },
+          {
+            $addFields: {
+              voteDifference: { $subtract: ["$upVote", "$downVote"] },
+              latest: {
+                $cond: {
+                  if: { $gt: ['$createdAt', '$updatedAt'] },
+                  then: '$createdAt',
+                  else: '$updatedAt'
+                }
+              },
+            }
+          },
+          {
+            $sort: { latest: -1 }
+          },
+          { $project: { _id: 1, voteDifference: 1, title: 1 } } 
+        ];
+      result = await postCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
 
     //API to get a post based on id
     app.get('/posts/:id', async (req, res) => {
@@ -161,6 +192,13 @@ async function run() {
       const updatedDownVote = findResult.downVote;
 
       res.send({ ...updateResult, updatedDownVote });
+    });
+
+    // API to insert a new post
+    app.post('/posts', async (req, res) => {
+      const post = req.body;
+      const result = await postCollection.insertOne(post);
+      res.send(result);
     });
 
     // API to insert a comment
