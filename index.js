@@ -148,11 +148,20 @@ async function run() {
           {
             $sort: { latest: -1 }
           },
-          { $project: { _id: 1, voteDifference: 1, title: 1 } } 
+          { $project: { _id: 1, voteDifference: 1, title: 1 } }
         ];
       result = await postCollection.aggregate(pipeline).toArray();
       res.send(result);
     });
+
+    //API to delete post based on id 
+    app.delete('/posts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await postCollection.deleteOne(query);
+      res.send(result);
+    });
+
 
     //API to get a post based on id
     app.get('/posts/:id', async (req, res) => {
