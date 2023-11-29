@@ -127,6 +127,41 @@ async function run() {
       res.send(result);
     });
 
+    //API to get latest posts of a user and limit data by count 
+    app.get('/posts/latest', async (req, res) => {
+      const email = req.query.email;
+      const count = parseInt(req.query.count);
+
+      const query = { authorEmail: email };
+
+      const pipeline =
+        [
+          { $match: query },
+          {
+            $addFields: {
+              voteDifference: { $subtract: ["$upVote", "$downVote"] },
+              latest: {
+                $cond: {
+                  if: { $gt: ['$createdAt', '$updatedAt'] },
+                  then: '$createdAt',
+                  else: '$updatedAt'
+                }
+              },
+            }
+          },
+          {
+            $sort: { latest: -1 }
+          },
+          {
+            $limit: count
+          }
+        ];
+      result = await postCollection.aggregate(pipeline).toArray();
+
+      res.send(result);
+    });
+
+
     //API to get a post based on user email
     app.get('/posts/email/:email', async (req, res) => {
       const email = req.params.email;
