@@ -493,9 +493,12 @@ async function run() {
       res.send(result);
     });
 
-    // API to get all announcements
+    // API to get all announcements (get latest first)
     app.get('/announcements', async (req, res) => {
-      const result = await announcementCollection.find().toArray();
+      const options = {
+        sort: { createdAt: -1 },
+      };
+      const result = await announcementCollection.find({}, options).toArray();
       res.send(result);
     });
 
