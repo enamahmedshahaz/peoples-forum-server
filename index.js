@@ -57,7 +57,7 @@ async function run() {
         next();
       })
     }
-    
+
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -120,6 +120,27 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.send(result);
     });
+
+    //API to get all users
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    //API to make a user admin
+    app.patch('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          role: 'admin',
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
 
     // API to get all tags (sorted)
     app.get('/tags', async (req, res) => {
