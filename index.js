@@ -28,7 +28,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // Get the database and collection on which to run the operation
     const database = client.db("PeoplesForumDB");
@@ -158,7 +158,7 @@ async function run() {
     });
 
     //API to get latest posts of a user and limit data by count 
-    app.get('/posts/latest', async (req, res) => {
+    app.get('/posts/latest', verifyToken, async (req, res) => {
       const email = req.query.email;
       const count = parseInt(req.query.count);
 
@@ -193,7 +193,7 @@ async function run() {
 
 
     //API to get a post based on user email
-    app.get('/posts/email/:email', async (req, res) => {
+    app.get('/posts/email/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { authorEmail: email };
 
@@ -221,8 +221,8 @@ async function run() {
       res.send(result);
     });
 
-    //API to delete post based on id 
-    app.delete('/posts/:id', async (req, res) => {
+    //API to delete post based on post id 
+    app.delete('/posts/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await postCollection.deleteOne(query);
@@ -230,7 +230,7 @@ async function run() {
     });
 
 
-    //API to get a post based on id
+    //API to get a post based on post id
     app.get('/posts/id/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -239,7 +239,7 @@ async function run() {
     });
 
     // API to increment upvote field of a  post based on id
-    app.patch('/posts/incrementUpVote/:id', async (req, res) => {
+    app.patch('/posts/incrementUpVote/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
 
       const filter = { _id: new ObjectId(id) };
@@ -255,7 +255,7 @@ async function run() {
     });
 
     // API to increment downvote field of  post based on id
-    app.patch('/posts/incrementDownVote/:id', async (req, res) => {
+    app.patch('/posts/incrementDownVote/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
 
       const filter = { _id: new ObjectId(id) };
@@ -271,20 +271,20 @@ async function run() {
     });
 
     // API to insert a new post
-    app.post('/posts', async (req, res) => {
+    app.post('/posts', verifyToken, async (req, res) => {
       const post = req.body;
       const result = await postCollection.insertOne(post);
       res.send(result);
     });
 
     // API to insert a comment
-    app.post('/comments', async (req, res) => {
+    app.post('/comments', verifyToken, async (req, res) => {
       const comment = req.body;
       const result = await commentCollection.insertOne(comment);
       res.send(result);
     });
 
-    //API to get a comment based on post Id
+    //API to get a comments based on post Id
     app.get('/comments/:postId', async (req, res) => {
       const postId = req.params.postId;
       const query = { postId: postId };
@@ -293,9 +293,8 @@ async function run() {
     });
 
 
-
     // API to insert a report
-    app.post('/reports', async (req, res) => {
+    app.post('/reports', verifyToken, async (req, res) => {
       const report = req.body;
       const result = await reportCollection.insertOne(report);
       res.send(result);
@@ -303,7 +302,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
