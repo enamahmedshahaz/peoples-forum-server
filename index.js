@@ -84,7 +84,6 @@ async function run() {
     app.get('/users/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
 
-
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: 'forbidden access' })
       }
@@ -362,6 +361,27 @@ async function run() {
       res.send(result);
     });
 
+    // API to delete a report and associated comment
+    app.delete('/reports/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const reportId = req.params.id;
+
+      const foundReport = await reportCollection.findOne({ _id: new ObjectId(reportId) }, { commentId: 1 });
+      const associatedCommentId = foundReport.commentId;
+
+      // Start a transaction
+      const session = client.startSession();
+      session.startTransaction();
+
+      await reportCollection.deleteOne({ _id: new ObjectId(reportId) });
+      const result =
+        await commentCollection.deleteOne({ _id: new ObjectId(associatedCommentId) });
+
+      // Commit the transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      res.send(result);
+    });
 
     // API to insert a announcement
     app.post('/announcements', verifyToken, verifyAdmin, async (req, res) => {
@@ -375,7 +395,6 @@ async function run() {
       const result = await announcementCollection.find().toArray();
       res.send(result);
     });
-
 
 
     // Send a ping to confirm a successful connection
