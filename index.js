@@ -356,6 +356,12 @@ async function run() {
       res.send(result);
     });
 
+    // API to get all reports
+    app.get('/reports', verifyToken, verifyAdmin, async (req, res) => {
+      const result = await reportCollection.find().toArray();
+      res.send(result);
+    });
+
 
     // API to insert a announcement
     app.post('/announcements', verifyToken, verifyAdmin, async (req, res) => {
