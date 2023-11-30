@@ -396,6 +396,17 @@ async function run() {
       res.send(result);
     });
 
+    // API to get site stats or analytics
+    app.get('/admin-stats',verifyToken, verifyAdmin, async (req, res) => {
+
+      const users = await userCollection.estimatedDocumentCount();
+      const posts = await postCollection.estimatedDocumentCount();
+      const comments = await commentCollection.estimatedDocumentCount();
+
+      res.send({ users, posts, comments });
+
+    });
+
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
