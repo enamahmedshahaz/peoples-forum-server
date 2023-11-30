@@ -36,6 +36,8 @@ async function run() {
     const postCollection = database.collection("posts");
     const commentCollection = database.collection("comments");
     const reportCollection = database.collection("reports");
+    const announcementCollection = database.collection("announcements");
+
 
     //middlewares
     const verifyToken = (req, res, next) => {
@@ -353,6 +355,21 @@ async function run() {
       const result = await reportCollection.insertOne(report);
       res.send(result);
     });
+
+
+    // API to insert a announcement
+    app.post('/announcements', verifyToken, verifyAdmin, async (req, res) => {
+      const announcement = req.body;
+      const result = await announcementCollection.insertOne(announcement);
+      res.send(result);
+    });
+
+    // API to get all announcements
+    app.get('/announcements', async (req, res) => {
+      const result = await announcementCollection.find().toArray();
+      res.send(result);
+    });
+
 
 
     // Send a ping to confirm a successful connection
