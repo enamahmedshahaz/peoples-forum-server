@@ -42,7 +42,7 @@ async function run() {
       console.log('Inside verify token: ', req.headers.authorization);
       //no authorization header
       if (!req.headers.authorization) {
-        return res.status(401).send({ message: 'forbidden access' })
+        return res.status(401).send({ message: 'unauthorized access' })
       }
       //if has authorization header, extract token from header and verify it
       const token = req.headers.authorization.split(' ')[1];
@@ -50,13 +50,25 @@ async function run() {
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         // token is not valid
         if (err) {
-          return res.status(401).send({ message: 'forbidden access' })
+          return res.status(401).send({ message: 'unauthorized access' })
         }
         //token is valid
         req.decoded = decoded;
         next();
       })
     }
+    
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if (!isAdmin) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next();
+    }
+
 
 
     //jwt related api
@@ -72,7 +84,7 @@ async function run() {
 
 
       if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'unauthorized access' })
+        return res.status(403).send({ message: 'forbidden access' })
       }
 
 
@@ -84,7 +96,7 @@ async function run() {
         admin = user?.role === 'admin';
       }
       res.send({ admin });
-      
+
     });
 
 
