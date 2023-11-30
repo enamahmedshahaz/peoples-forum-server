@@ -185,7 +185,33 @@ async function run() {
             },
             {
               $sort: { voteDifference: -1, latest: -1 }
-            }
+            },
+            {
+              $lookup: {
+                from: 'comments',
+                localField: '_id',
+                foreignField: 'postId',
+                as: 'comments',
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                authorName: 1,
+                authorEmail: 1,
+                authorImage: 1,
+                title: 1,
+                description: 1,
+                tags: 1,
+                createdAt: 1,
+                upVote: 1,
+                downVote: 1,
+                voteDifference: 1,
+                latest: 1,
+                commentCount: { $size: '$comments' },
+              },
+            },
+
           ];
         result = await postCollection.aggregate(pipeline).toArray();
       } else {
@@ -205,12 +231,64 @@ async function run() {
             },
             {
               $sort: { latest: -1 }
+            },
+            {
+              $lookup: {
+                from: 'comments',
+                localField: '_id',
+                foreignField: 'postId',
+                as: 'comments',
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                authorName: 1,
+                authorEmail: 1,
+                authorImage: 1,
+                title: 1,
+                description: 1,
+                tags: 1,
+                createdAt: 1,
+                upVote: 1,
+                downVote: 1,
+                voteDifference: 1,
+                latest: 1,
+                commentCount: { $size: '$comments' },
+              },
             }
           ];
         result = await postCollection.aggregate(pipeline).toArray();
       }
       res.send(result);
     });
+
+
+    //a sample api to test server
+    app.get('/sample', async (req, res) => {
+      const pipeline =
+        [
+          {
+            $lookup: {
+              from: 'comments',
+              localField: '_id',
+              foreignField: 'postId',
+              as: 'comments',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              description: 1,
+              commentCount: { $size: '$comments' },
+            },
+          }
+        ];
+      result = await postCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
 
     //API to get latest posts of a user and limit data by count 
     app.get('/posts/latest', verifyToken, async (req, res) => {
@@ -239,7 +317,8 @@ async function run() {
           },
           {
             $limit: count
-          }
+          },
+
         ];
       result = await postCollection.aggregate(pipeline).toArray();
 
@@ -270,7 +349,31 @@ async function run() {
           {
             $sort: { latest: -1 }
           },
-          { $project: { _id: 1, voteDifference: 1, title: 1 } }
+          {
+            $lookup: {
+              from: 'comments',
+              localField: '_id',
+              foreignField: 'postId',
+              as: 'comments',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              authorName: 1,
+              authorEmail: 1,
+              authorImage: 1,
+              title: 1,
+              description: 1,
+              tags: 1,
+              createdAt: 1,
+              upVote: 1,
+              downVote: 1,
+              voteDifference: 1,
+              latest: 1,
+              commentCount: { $size: '$comments' },
+            },
+          }
         ];
       result = await postCollection.aggregate(pipeline).toArray();
       res.send(result);
@@ -397,7 +500,7 @@ async function run() {
     });
 
     // API to get site stats or analytics
-    app.get('/admin-stats',verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/admin-stats', verifyToken, verifyAdmin, async (req, res) => {
 
       const users = await userCollection.estimatedDocumentCount();
       const posts = await postCollection.estimatedDocumentCount();
