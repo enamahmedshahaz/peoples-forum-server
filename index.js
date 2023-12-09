@@ -438,14 +438,17 @@ async function run() {
     // API to insert a comment
     app.post('/comments', verifyToken, async (req, res) => {
       const comment = req.body;
-      const result = await commentCollection.insertOne(comment);
+      const postIdString = comment.postId;
+      const modifiedComment = {...comment, postId: new ObjectId(postIdString)};
+      console.log('comment to insert: ', modifiedComment);
+      const result = await commentCollection.insertOne(modifiedComment);
       res.send(result);
     });
 
     //API to get a comments based on post Id
     app.get('/comments/:postId', async (req, res) => {
       const postId = req.params.postId;
-      const query = { postId: postId };
+      const query = { postId: new ObjectId(postId) };
       const result = await commentCollection.find(query).toArray();
       res.send(result);
     });
